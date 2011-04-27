@@ -6,12 +6,12 @@ chrome.extension.onRequest.addListener(
     console.log(sender.tab ?
                 "from a content script:" + sender.tab.url :
                 "from the extension");
-    if (request.urlHref != "")
+    if (request.pageJumpType != "noJump")
     {	
       //alert("back" + response.urlHref);
       sendResponse({farewell: "goodbye"});
       chrome.tabs.getSelected(null, function(tab) {
-      chrome.tabs.sendRequest(tab.id, {urlHref: request.urlHref}, function(response) {
+      chrome.tabs.sendRequest(tab.id, request, function(response) {
       console.log(response.farewell);
       });
 });
