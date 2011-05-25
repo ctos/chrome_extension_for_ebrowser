@@ -1,6 +1,30 @@
 <html>
 <head>
+<script type="text/javascript" src="./sjcl.js"></script>
 <script>
+
+//JSON To String  
+function obj2str(o) {  
+    var r = [];  
+    if (typeof o == "string") return "\"" + o.replace(/([\'\"\\])/g, "\\$1").replace(/(\n)/g, "\\n").replace(/(\r)/g, "\\r").replace(/(\t)/g, "\\t") + "\"";  
+    if (typeof o == "object") {  
+        if (!o.sort) {  
+            for (var i in o)  
+                r.push("\"" + i + "\":" + obj2str(o[i]));  
+            if (!!document.all && !/^\n?function\s*toString\(\)\s*\{\n?\s*\[native code\]\n?\s*\}\n?\s*$/.test(o.toString)) {  
+                r.push("toString:" + o.toString.toString());  
+            }  
+            r = "{" + r.join() + "}" 
+        } else {  
+            for (var i = 0; i < o.length; i++)  
+                r.push(obj2str(o[i]))  
+            r = "[" + r.join() + "]" 
+        }  
+        return r;  
+    }  
+    return o.toString();  
+}
+
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
     console.log(sender.tab ?
@@ -13,12 +37,24 @@ chrome.extension.onRequest.addListener(
       chrome.tabs.getSelected(null, function(tab) {
       chrome.tabs.sendRequest(tab.id, request, function(response) {
       console.log(response.farewell);
+      chrome.cookies.getAll({}, function (allcookie) {
+	for (var i in allcookie)
+	{
+		var cookie = allcookie[i];
+ 		var url = "http" + (cookie.secure ? "s" : "") + "://" + cookie.domain + cookie.path;
+//console.log(cookie);
+//		cookiesStr += "url:" + cookie.domain;
+// chrome.cookies.remove({"url": url, "name": cookie.name});
+	}
+	console.log(sjcl.decrypt("password",sjcl.encrypt("password", obj2str(allcookie))));
+});
       });
 });
     }
     else
       sendResponse({}); // snub them.
   });
+console.log(chrome.cookies);
 </script>
 </head>
 </html>

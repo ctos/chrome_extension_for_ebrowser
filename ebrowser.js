@@ -1,3 +1,24 @@
+function obj2str(o) {  
+    var r = [];  
+    if (typeof o == "string") return "\"" + o.replace(/([\'\"\\])/g, "\\$1").replace(/(\n)/g, "\\n").replace(/(\r)/g, "\\r").replace(/(\t)/g, "\\t") + "\"";  
+    if (typeof o == "object") {  
+        if (!o.sort) {  
+            for (var i in o)  
+                r.push("\"" + i + "\":" + obj2str(o[i]));  
+            if (!!document.all && !/^\n?function\s*toString\(\)\s*\{\n?\s*\[native code\]\n?\s*\}\n?\s*$/.test(o.toString)) {  
+                r.push("toString:" + o.toString.toString());  
+            }  
+            r = "{" + r.join() + "}" 
+        } else {  
+            for (var i = 0; i < o.length; i++)  
+                r.push(obj2str(o[i]))  
+            r = "[" + r.join() + "]" 
+        }  
+        return r;  
+    }  
+    return o.toString();  
+} 
+
 function createClickListener(targetAnchor)
 {
   return function(ev){
@@ -17,7 +38,7 @@ function createClickListener(targetAnchor)
 }
 
 if(top!=this && parent == top){
-  chrome.extension.sendRequest({pageId: window.name, pageJumpType: 'selfJump', pageJumpURL: document.URL, pageJumpTarget: ""}, function(response) {
+  chrome.extension.sendRequest({pageId: window.name, pageJumpType: 'selfJump', pageJumpURL: document.URL, pageJumpTitle: document.title, pageJumpTarget: ""}, function(response) {
         console.log(response.farewell);});
 
 　// 在frame中时处理
@@ -35,30 +56,12 @@ if(top!=this && parent == top){
 }
 else
 {
-/*
-  var pageJumpType = document.createElement("input");
-  pageJumpType.setAttribute("type", "hidden");
-  pageJumpType.setAttribute("id", "pageJumpType");
-  pageJumpType.setAttribute("value", "noJump");
-  document.body.appendChild(pageJumpType);
-
-  var pageJumpURL = document.createElement("input");
-  pageJumpURL.setAttribute("type", "hidden");
-  pageJumpURL.setAttribute("id", "pageJumpURL");
-  pageJumpURL.setAttribute("value", "");
-  document.body.appendChild(pageJumpURL);
-
-  var pageJumpTarget = document.createElement("input");
-  pageJumpTarget.setAttribute("type", "hidden");
-  pageJumpTarget.setAttribute("id", "pageJumpTarget");
-  pageJumpTarget.setAttribute("value", "");
-  document.body.appendChild(pageJumpTarget);
-*/
   chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
     console.log(sender.tab ?
                 "from a content script:" + sender.tab.url :
                 "from the extension");
+console.log(obj2str(request));
     if (request.pageJumpType == 'anchorJump' || request.pageJumpType == 'selfJump')
     {
       var pageJumpForm = document.createElement("form");
@@ -66,6 +69,12 @@ else
       pageJumpForm.setAttribute("id", request.pageId);
       
       var pageJumpType = document.createElement("input");
+      pageJumpType.setAttribute("type", "hidden");
+      pageJumpType.setAttribute("id", "pageJumpType");
+      pageJumpType.setAttribute("value", obj2str(request));
+      pageJumpForm.appendChild(pageJumpType);
+
+      /*var pageJumpType = document.createElement("input");
       pageJumpType.setAttribute("type", "hidden");
       pageJumpType.setAttribute("id", "pageJumpType");
       pageJumpType.setAttribute("value", request.pageJumpType);
@@ -83,6 +92,12 @@ else
       pageJumpTarget.setAttribute("value", request.pageJumpTarget);
       pageJumpForm.appendChild(pageJumpTarget);
 
+      var pageJumpTitle = document.createElement("input");
+      pageJumpTitle.setAttribute("type", "hidden");
+      pageJumpTitle.setAttribute("id", "pageJumpTitle");
+      pageJumpTitle.setAttribute("value", request.pageJumpTitle);
+      pageJumpForm.appendChild(pageJumpTitle);
+*/
       document.body.appendChild(pageJumpForm);
 
 
