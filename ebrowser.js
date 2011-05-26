@@ -26,7 +26,7 @@ function createClickListener(targetAnchor)
       || targetAnchor.target == "_self" || targetAnchor.target == "_parent" 
       || targetAnchor.target.length == 0)
     {
-      chrome.extension.sendRequest({pageId: window.name, pageJumpType: 'anchorJump', pageJumpURL: targetAnchor.href, pageJumpTarget: targetAnchor.target}, function(response) {
+      chrome.extension.sendRequest({msgType: 'jump', pageId: window.name, pageJumpType: 'anchorJump', pageJumpURL: targetAnchor.href, pageJumpTarget: targetAnchor.target}, function(response) {
         console.log(response.farewell);});
       ev.preventDefault();
     }
@@ -37,8 +37,19 @@ function createClickListener(targetAnchor)
   };
 }
 
+function checkGetCookies()
+{
+	var getCookiesInput = document.getElementById("getCookiesInput");
+	chrome.extension.sendRequest({msgType: 'getCookies'}, function(response)
+	{
+		getCookiesInput.value = response.cookies;
+	});
+//	getCookiesInput.value = "xxxxx";
+//		window.clearInterval();
+}
+
 if(top!=this && parent == top){
-  chrome.extension.sendRequest({pageId: window.name, pageJumpType: 'selfJump', pageJumpURL: document.URL, pageJumpTitle: document.title, pageJumpTarget: ""}, function(response) {
+  chrome.extension.sendRequest({msgType: 'jump', pageId: window.name, pageJumpType: 'selfJump', pageJumpURL: document.URL, pageJumpTitle: document.title, pageJumpTarget: ""}, function(response) {
         console.log(response.farewell);});
 
 　// 在frame中时处理
@@ -56,6 +67,19 @@ if(top!=this && parent == top){
 }
 else
 {
+  var setCookiesInput = document.createElement("input");
+  setCookiesInput.setAttribute("id", "setCookiesInput");
+  setCookiesInput.setAttribute("type", "hidden");
+  document.body.appendChild(setCookiesInput);
+
+  var getCookiesInput = document.createElement("input");
+  getCookiesInput.setAttribute("id", "getCookiesInput");
+  getCookiesInput.setAttribute("type", "hidden");
+  document.body.appendChild(getCookiesInput);
+
+  setInterval("checkGetCookies()", 1000);
+  console.log("fuckTimer");
+
   chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
     console.log(sender.tab ?

