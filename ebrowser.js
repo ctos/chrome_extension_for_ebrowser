@@ -48,6 +48,31 @@ function checkGetCookies()
 //		window.clearInterval();
 }
 
+function checkSetCookies()
+{
+	var setCookiesInput = document.getElementById("setCookiesInput");
+	if (setCookiesInput.value != "")
+	{
+		console.log("sv:" + setCookiesInput.value);
+		chrome.extension.sendRequest({msgType: 'setCookies', cookies: setCookiesInput.value}, function(response){});
+		setCookiesInput.value = "";
+	}
+	else
+	{
+		console.log("nothing");
+	}
+}
+
+function checkDelCookies()
+{
+	var delCookiesInput = document.getElementById("delCookiesInput");
+	if (delCookiesInput.value == "1")
+	{
+		chrome.extension.sendRequest({msgType: 'delCookies'}, function(response){});
+		delCookiesInput.value = "0";
+	}
+}
+
 if(top!=this && parent == top){
   chrome.extension.sendRequest({msgType: 'jump', pageId: window.name, pageJumpType: 'selfJump', pageJumpURL: document.URL, pageJumpTitle: document.title, pageJumpTarget: ""}, function(response) {
         console.log(response.farewell);});
@@ -70,6 +95,7 @@ else
   var setCookiesInput = document.createElement("input");
   setCookiesInput.setAttribute("id", "setCookiesInput");
   setCookiesInput.setAttribute("type", "hidden");
+  setCookiesInput.setAttribute("value", "");
   document.body.appendChild(setCookiesInput);
 
   var getCookiesInput = document.createElement("input");
@@ -77,8 +103,16 @@ else
   getCookiesInput.setAttribute("type", "hidden");
   document.body.appendChild(getCookiesInput);
 
+  var delCookiesInput = document.createElement("input");
+  delCookiesInput.setAttribute("id", "delCookiesInput");
+  delCookiesInput.setAttribute("type", "hidden");
+  delCookiesInput.setAttribute("value", "0");
+  document.body.appendChild(delCookiesInput);
+
+
   setInterval("checkGetCookies()", 1000);
-  console.log("fuckTimer");
+  setInterval("checkSetCookies()", 1000);
+  setInterval("checkDelCookies()", 1000);
 
   chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {

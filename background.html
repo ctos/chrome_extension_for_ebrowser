@@ -27,9 +27,9 @@ function obj2str(o) {
 
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
-    console.log(sender.tab ?
-                "from a content script:" + sender.tab.url :
-                "from the extension");
+//    console.log(sender.tab ?
+ //               "from a content script:" + sender.tab.url :
+   //             "from the extension");
 	if (request.msgType == "jump" && request.pageJumpType != "noJump")
     {	
       //alert("back" + response.urlHref);
@@ -67,7 +67,39 @@ chrome.extension.onRequest.addListener(
 		sendResponse({cookies: rvalue});
        	 	//console.log(sjcl.decrypt("password",sjcl.encrypt("password", obj2str(allcookie))));
 		});
+		//console.log("try to get Cookie");
 	
+    }
+    else if (request.msgType == "setCookies")
+    {
+        var cookiesJson = sjcl.decrypt("password", request.cookies);
+	var cookies = eval("(" + cookiesJson + ")");
+	for (var i in cookies)
+	{
+		var cookie = cookies[i];
+		var url = "http" + (cookie.secure ? "s" : "") + "://" + cookie.domain + cookie.path;
+		//chrome.cookies.set(cookies[i], function(e){});
+		console.log(cookies[i]);
+		chrome.cookies.set({"url": url, "name": cookie.name, "value": cookie.value, "domain": cookie.domain, "path": cookie.path, "secure": cookie.secure, "httpOnly": cookie.httpOnly, "expirationDate": cookie.expirationDate, "storeId": cookie.storeId});
+	}
+	console.log("try to setCookie");
+    }
+    else if (request.msgType == "delCookies")
+    {
+	chrome.cookies.getAll({}, function(allcookie){
+		for (var i in allcookie)
+		{
+			var cookie = allcookie[i];
+			if (cookie.domain != "127.0.0.1")
+			{
+				var url = "http" + (cookie.secure ? "s" : "") + "://" + cookie.domain + cookie.path;
+  				chrome.cookies.remove({"url": url, "name": cookie.name});
+				//chrome.cookies.remove({"url": url, "name": cookie.name});
+			//	chrome.cookies.remove(cookie, function(e){});
+			}	
+		}
+	});
+	console.log("try to remove cookie");
     }
     else
       sendResponse({}); // snub them.
